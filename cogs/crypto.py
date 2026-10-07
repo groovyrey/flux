@@ -1,12 +1,31 @@
 from __future__ import annotations
 
+import base64
+import os
+
 from cryptography.fernet import Fernet, InvalidToken
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
 from storage.db import get_user_key
+
+SALT = b"flux_encryption_salt_v1"
+
+
+def _derive_fernet_key(password: str) -> bytes:
+    password_bytes = password.encode("utf-8")
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=SALT,
+        iterations=390000,
+    )
+    derived = kdf.derive(password_bytes)
+    return base64.urlsafe_b64encode(derived)
 
 
 class Crypto(commands.Cog):
@@ -27,7 +46,7 @@ class Crypto(commands.Cog):
             return
 
         try:
-            fernet = Fernet(user_key.encode("utf-8"))
+            fernet = Fernet(_derive_fernet_key(user_key))
             encrypted = fernet.encrypt(message.encode("utf-8")).decode("utf-8")
         except (ValueError, TypeError, InvalidToken):
             await interaction.response.send_message(
@@ -74,7 +93,7 @@ async def decrypt_message(
         return
 
     try:
-        fernet = Fernet(user_key.encode("utf-8"))
+        fernet = Fernet(_derive_fernet_key(user_key))
         decrypted = fernet.decrypt(content.encode("utf-8")).decode("utf-8")
     except (InvalidToken, ValueError, TypeError):
         await interaction.response.send_message(

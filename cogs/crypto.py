@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import base64
-import os
 
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
@@ -61,7 +60,7 @@ class Crypto(commands.Cog):
             return
 
         await interaction.response.send_message(
-            f"Here is your encrypted text:\n```{encrypted}```\nCopy and share it. Only people with the same key can decrypt it.",
+            f"```{encrypted}```",
             ephemeral=True,
         )
 

@@ -22,12 +22,16 @@ class FluxBot(commands.Bot):
         self.settings = settings
 
     async def setup_hook(self) -> None:
+        from storage.db import init_db
+
         for package in PACKAGES:
             module = importlib.import_module(package)
             for info in pkgutil.iter_modules(module.__path__):
                 if info.name.startswith("_"):
                     continue
                 await self.load_extension(f"{package}.{info.name}")
+
+        await init_db()
 
         self.tree.on_error = self._on_app_command_error
 

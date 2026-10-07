@@ -13,10 +13,15 @@ class MissingTokenError(RuntimeError):
     """Raised when DISCORD_TOKEN is not set."""
 
 
+class MissingEncryptionKeyError(RuntimeError):
+    """Raised when ENCRYPTION_KEY is not set."""
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     token: str
     test_guild_id: int | None
+    encryption_key: bytes
 
     @classmethod
     def load(cls) -> Settings:
@@ -27,4 +32,9 @@ class Settings:
         raw_guild = os.getenv("TEST_GUILD_ID", "").strip()
         test_guild_id = int(raw_guild) if raw_guild.isdigit() else None
 
-        return cls(token=token, test_guild_id=test_guild_id)
+        enc_key = os.getenv("ENCRYPTION_KEY", "").strip()
+        if not enc_key:
+            raise MissingEncryptionKeyError("ENCRYPTION_KEY is missing. Generate one with Fernet.generate_key()")
+        encryption_key = enc_key.encode()
+
+        return cls(token=token, test_guild_id=test_guild_id, encryption_key=encryption_key)

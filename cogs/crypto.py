@@ -33,7 +33,7 @@ class Crypto(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="encrypt", description="Encrypt a message privately")
+    @app_commands.command(name="encrypt", description="Encrypt a message")
     @app_commands.describe(message="The message to encrypt")
     async def encrypt(self, interaction: discord.Interaction, message: str) -> None:
         user_key = await get_user_key(interaction.user.id)
@@ -59,10 +59,7 @@ class Crypto(commands.Cog):
             )
             return
 
-        await interaction.response.send_message(
-            f"```{encrypted}```",
-            ephemeral=True,
-        )
+        await interaction.response.send_message(encrypted)
 
 
 async def decrypt_message(
@@ -106,7 +103,7 @@ async def decrypt_message(
         )
         return
 
-    await interaction.response.send_message(f"Decrypted:\n{decrypted}", ephemeral=True)
+    await interaction.response.send_message(decrypted, ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:

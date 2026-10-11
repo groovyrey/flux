@@ -1,3 +1,3 @@
-from .settings import MissingEncryptionKeyError, MissingTokenError, Settings
+from .settings import MissingTokenError, Settings
 
-__all__ = ["MissingEncryptionKeyError", "MissingTokenError", "Settings"]
+__all__ = ["MissingTokenError", "Settings"]

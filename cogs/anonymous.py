@@ -22,7 +22,7 @@ async def _deliver(
     try:
         await user.send(embed=_anon_embed(text), view=_reply_view(conversation.id))
     except discord.Forbidden:
-        return "Could not deliver the message. They may have DMs closed."
+        return "Could not deliver the message. They may have DMs closed or haven't added the app."
     except discord.HTTPException:
         return "Something went wrong delivering the message."
     return None
@@ -100,25 +100,26 @@ class Anonymous(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="anon", description="Send an anonymous DM to a member")
+    @app_commands.command(name="anon", description="Send an anonymous DM to a user")
     @app_commands.describe(
-        member="The member who receives the anonymous message",
+        user="Who receives the anonymous message",
         message="The message to send",
     )
-    @app_commands.guild_only()
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(1, 10.0, key=lambda i: i.user.id)
     async def anon(
         self,
         interaction: discord.Interaction,
-        member: discord.Member,
+        user: discord.User,
         message: app_commands.Range[str, 1, 2000],
     ) -> None:
-        if member.bot:
+        if user.bot:
             await interaction.response.send_message(
                 "You cannot message a bot.", ephemeral=True
             )
             return
-        if member.id == interaction.user.id:
+        if user.id == interaction.user.id:
             await interaction.response.send_message(
                 "You cannot message yourself.", ephemeral=True
             )
@@ -133,8 +134,8 @@ class Anonymous(commands.Cog):
 
         await interaction.response.defer(ephemeral=True)
 
-        conversation = create_conversation(interaction.user.id, member.id)
-        error = await _deliver(member, conversation, text)
+        conversation = create_conversation(interaction.user.id, user.id)
+        error = await _deliver(user, conversation, text)
         if error is not None:
             await interaction.followup.send(error, ephemeral=True)
             return
